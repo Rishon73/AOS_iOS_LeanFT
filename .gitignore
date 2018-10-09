@@ -257,3 +257,4 @@ workspace.xml
 
 src/main/resources/META-INF/MANIFEST.MF
 AOS-iOS-UFTPro.iml
+**/appmodels/com/mf/*.java

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <applicationModel>
     <name>Application Model</name>
-    <className>AppModelAOS</className>
+    <className>AppModelAOS_iOS</className>
     <objects>
         <object type="Application" technology="Mobile">
             <name>Advantage Shopping</name>
@@ -182,7 +182,7 @@
                 </object>
                 <object type="Button" technology="Mobile">
                     <name>CHECKOUT (PAY 1,399.98)</name>
-                    <codeName>CHECKOUTPAYButton</codeName>
+                    <codeName>CHECKOUTPAYButton_old</codeName>
                     <description></description>
                     <identification>
                         <properties>
@@ -228,6 +228,20 @@
                             <property name="ClassName" type="string" isRegExp="false">Button</property>
                             <property name="MobileCenterIndex" type="int" isRegExp="false">0</property>
                             <property name="Text" type="string" isRegExp="false">Yes</property>
+                        </properties>
+                    </identification>
+                </object>
+                <object type="Button" technology="Mobile">
+                    <name>CHECKOUT (PAY ****)</name>
+                    <codeName>CHECKOUTPAYButton</codeName>
+                    <description></description>
+                    <identification>
+                        <properties>
+                            <property name="AccessibilityId" type="string" isRegExp="true">CHECKOUT (.*)</property>
+                            <property name="ClassName" type="string" isRegExp="false">Button</property>
+                            <property name="MobileCenterIndex" type="int" isRegExp="false">4</property>
+                            <property name="NativeClass" type="string" isRegExp="false">UIButton</property>
+                            <property name="Text" type="string" isRegExp="true">CHECKOUT (.*)</property>
                         </properties>
                     </identification>
                 </object>

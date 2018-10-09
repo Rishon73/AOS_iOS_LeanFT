@@ -8,16 +8,18 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import com.hp.lft.sdk.*;
 import com.hp.lft.sdk.mobile.*;
+import com.mf.utils.*;
 
 import unittesting.*;
 
 public class LeanFtTest extends UnitTestClassBase {
 
-
     private boolean noProblem;
     private Device device;
     private static AppModelAOS_iOS appModel;
-    private MCUtils utils = new MCUtils();
+    private MobileLabUtils utils = new MobileLabUtils();
+    private String userName = "Shahar";
+    private String userPassword  = "460d4691b2f164b933e1476fa1";
 
     @BeforeClass
     public void beforeClass() throws Exception {
@@ -29,13 +31,13 @@ public class LeanFtTest extends UnitTestClassBase {
 
     @BeforeMethod
     public void beforeMethod() throws Exception {
-        utils.logMessages("Enter setUp() method ", LOG_LEVEL.INFO );
-        utils.INSTALL_APP = true;
-        utils.UNINSTALL_APP = false;
-        utils.HIGHLIGHT =true;
-        utils.APP_IDENTIFIER = "com.Advantage.iShopping";
-        utils.APP_VERSION = "1.1";
-        utils.IS_PACKAGED = true;
+        Logging.logMessage("Enter setUp() method ", Logging.LOG_LEVEL.INFO );
+        utils.setInstallApp(false);
+        utils.setUninstallApp(false);
+        utils.setHighlight(true);
+        utils.setAppIdentifier("com.Advantage.iShopping");
+        utils.setAppVersion("1.1.4");
+        utils.setPackaged(true);
 
         noProblem = true;
 
@@ -45,31 +47,32 @@ public class LeanFtTest extends UnitTestClassBase {
             deviceDescription.setOsType("IOS");
             deviceDescription.setOsVersion(">=9.0.0");
 
-            utils.lockDevice(deviceDescription);
+            utils.lockDevice(deviceDescription, MobileLabUtils.LabType.MC);
             //utils.lockDeviceById("8a05bbf719c5a6840177ad62b88674ee53893590");
 
-            if (utils.device != null) {
-                appModel = new AppModelAOS_iOS(utils.device);
+            device = utils.getDevice();
+            if (device != null) {
+                appModel = new AppModelAOS_iOS(device);
                 utils.setApp();
 
-                utils.logMessages ("Allocated device: \"" + utils.device.getName() + "\" (" + utils.device.getId() + "), Model :"
-                        + utils.device.getModel() + ", OS: " + utils.device.getOSType() + " version: " + utils.device.getOSVersion()
-                        + ", manufacturer: " + utils.device.getManufacturer() + ". App in use: \"" + utils.app.getName()
-                        + "\" v" + utils.app.getVersion(), LOG_LEVEL.INFO);
+                Logging.logMessage ("Allocated device: \"" + device.getName() + "\" (" + device.getId() + "), Model :"
+                        + device.getModel() + ", OS: " + device.getOSType() + " version: " + device.getOSVersion()
+                        + ", manufacturer: " + device.getManufacturer() + ". App in use: \"" + utils.getApp().getName()
+                        + "\" v" + utils.getApp().getVersion(),Logging. LOG_LEVEL.INFO);
 
-                if (utils.INSTALL_APP) {
-                    utils.logMessages ("Installing app: " + utils.app.getName(), LOG_LEVEL.INFO);
-                    utils.app.install();
+                if (utils.isInstallApp()) {
+                    Logging.logMessage ("Installing app: " + utils.getApp().getName(), Logging.LOG_LEVEL.INFO);
+                    utils.getApp().install();
                 } else {
-                    utils.logMessages ("Restarting app: " + utils.app.getName(), LOG_LEVEL.INFO);
-                    utils.app.restart();
+                    Logging.logMessage ("Restarting app: " + utils.getApp().getName(), Logging.LOG_LEVEL.INFO);
+                    utils.getApp().restart();
                 }
             } else {
-                utils.logMessages ("Device couldn't be allocated, exiting script", LOG_LEVEL.ERROR);
+                Logging.logMessage ("Device couldn't be allocated, exiting script", Logging.LOG_LEVEL.ERROR);
                 noProblem = false;
             }
         } catch (Exception ex) {
-            utils.logMessages ("Exception in setup(): " + ex.getMessage(), LOG_LEVEL.ERROR);
+            Logging.logMessage ("Exception in setup(): " + ex.getMessage(), Logging.LOG_LEVEL.ERROR);
             noProblem = false;
         }
     }
@@ -86,104 +89,112 @@ public class LeanFtTest extends UnitTestClassBase {
         }
 
         try {
-            utils.logMessages ("Tap 'Open Menu'", LOG_LEVEL.INFO);
-            if (utils.HIGHLIGHT)
-                appModel.AdvantageShoppingApplication().MenuButton().highlight();
-            appModel.AdvantageShoppingApplication().MenuButton().tap();
+            Logging.logMessage ("Tap 'Open Menu'", Logging.LOG_LEVEL.INFO);
+            openMenu();
 
-            utils.logMessages ("Check if the user signed in", LOG_LEVEL.INFO);
+            Logging.logMessage ("Check if the user signed in", Logging.LOG_LEVEL.INFO);
             if (appModel.AdvantageShoppingApplication().SIGNOUTLabel().exists(5)) {
                 signOut();
                 utils.windowSync(2000);
-                utils.logMessages ("Tap 'Open Menu (after sign-out)'", LOG_LEVEL.INFO);
-                appModel.AdvantageShoppingApplication().MenuButton().tap();
+
+                Logging.logMessage ("Tap 'Open Menu (after sign-out)'", Logging.LOG_LEVEL.INFO);
+                openMenu();
                 utils.windowSync(2000);
             }
 
-            utils.logMessages ("Tap login label", LOG_LEVEL.INFO);
-            if (utils.HIGHLIGHT)
-                appModel.AdvantageShoppingApplication().LOGINLabel().highlight();
-            appModel.AdvantageShoppingApplication().LOGINLabel().tap();
+            signIn();
 
-            utils.logMessages ("Type name", LOG_LEVEL.INFO);
-            if (utils.HIGHLIGHT)
-                appModel.AdvantageShoppingApplication().USERNAMEEditField().highlight();
-            appModel.AdvantageShoppingApplication().USERNAMEEditField().setText("sshiff");
-
-            utils.logMessages ("Type password", LOG_LEVEL.INFO);
-            if (utils.HIGHLIGHT)
-                appModel.AdvantageShoppingApplication().PASSWORDEditField().highlight();
-            appModel.AdvantageShoppingApplication().PASSWORDEditField().setSecure("97ededd61184a118aeb05c9627");
-
-            utils.logMessages ("Tap login button", LOG_LEVEL.INFO);
-            if (utils.HIGHLIGHT)
-                appModel.AdvantageShoppingApplication().LOGINButton().highlight();
-            appModel.AdvantageShoppingApplication().LOGINButton().tap();
-
-            utils.logMessages ("Select 'laptop' category", LOG_LEVEL.INFO);
-            if (utils.HIGHLIGHT)
+            Logging.logMessage ("Select 'laptop' category", Logging.LOG_LEVEL.INFO);
+            if (utils.isHighlight())
                 appModel.AdvantageShoppingApplication().LAPTOPSLabel().highlight();
             appModel.AdvantageShoppingApplication().LAPTOPSLabel().tap();
 
-            utils.logMessages ("Select a laptop", LOG_LEVEL.INFO);
-            if (utils.HIGHLIGHT)
+            Logging.logMessage ("Select a laptop", Logging.LOG_LEVEL.INFO);
+            if (utils.isHighlight())
                 appModel.AdvantageShoppingApplication().SelectedLaptop4().highlight();
             appModel.AdvantageShoppingApplication().SelectedLaptop4().tap();
 
-            utils.logMessages ("Tap 'Add to Cart' button", LOG_LEVEL.INFO);
-            if (utils.HIGHLIGHT)
+            Logging.logMessage ("Tap 'Add to Cart' button", Logging.LOG_LEVEL.INFO);
+            if (utils.isHighlight())
                 appModel.AdvantageShoppingApplication().ADDTOCARTButton().highlight();
             appModel.AdvantageShoppingApplication().ADDTOCARTButton().tap();
             utils.windowSync(1500);
 
-            utils.logMessages ("Tap the back button", LOG_LEVEL.INFO);
-            if (utils.HIGHLIGHT)
+            Logging.logMessage ("Tap the back button", Logging.LOG_LEVEL.INFO);
+            if (utils.isHighlight())
                 appModel.AdvantageShoppingApplication().BackButton().highlight();
             appModel.AdvantageShoppingApplication().BackButton().tap();
 
-            utils.logMessages ("Tap 'Open Menu'", LOG_LEVEL.INFO);
-            if (utils.HIGHLIGHT)
-                appModel.AdvantageShoppingApplication().MenuButton().highlight();
-            appModel.AdvantageShoppingApplication().MenuButton().tap();
+            Logging.logMessage ("Tap 'Open Menu'", Logging.LOG_LEVEL.INFO);
+            openMenu();
 
-            utils.logMessages ("Tap 'Open Cart'", LOG_LEVEL.INFO);
-            if (utils.HIGHLIGHT)
+            Logging.logMessage ("Tap 'Open Cart'", Logging.LOG_LEVEL.INFO);
+            if (utils.isHighlight())
                 appModel.AdvantageShoppingApplication().OpenCart().highlight();
             appModel.AdvantageShoppingApplication().OpenCart().tap();
 
-            utils.logMessages ("Tap the checkout button", LOG_LEVEL.INFO);
-            if (utils.HIGHLIGHT)
+            Logging.logMessage ("Tap the checkout button", Logging.LOG_LEVEL.INFO);
+            if (utils.isHighlight())
                 appModel.AdvantageShoppingApplication().CHECKOUTPAYButton().highlight();
             appModel.AdvantageShoppingApplication().CHECKOUTPAYButton().tap();
 
-            utils.logMessages ("Tap the pay now button", LOG_LEVEL.INFO);
-            if (utils.HIGHLIGHT)
+            Logging.logMessage ("Tap the pay now button", Logging.LOG_LEVEL.INFO);
+            if (utils.isHighlight())
                 appModel.AdvantageShoppingApplication().PAYNOWButton().highlight();
             appModel.AdvantageShoppingApplication().PAYNOWButton().tap();
 
-            utils.logMessages ("Tap OK", LOG_LEVEL.INFO);
-            if (utils.HIGHLIGHT)
+            Logging.logMessage ("Tap OK", Logging.LOG_LEVEL.INFO);
+            if (utils.isHighlight())
                 appModel.AdvantageShoppingApplication().OkButton().highlight();
             appModel.AdvantageShoppingApplication().OkButton().tap();
 
-            appModel.AdvantageShoppingApplication().MenuButton().tap();
+            openMenu();
             signOut();
 
-            utils.logMessages ("********** Test completed successfully **********", LOG_LEVEL.INFO);
+            Logging.logMessage ("********** Test completed successfully **********", Logging.LOG_LEVEL.INFO);
 
         } catch (ReplayObjectNotFoundException ronfex) {
-            utils.logMessages ("error code: " + ronfex.getErrorCode() + " - " + ronfex.getMessage(), LOG_LEVEL.ERROR);
+            Logging.logMessage ("error code: " + ronfex.getErrorCode() + " - " + ronfex.getMessage(), Logging.LOG_LEVEL.ERROR);
             Assert.fail();
         }
     }
 
     private void signOut() throws GeneralLeanFtException {
-        if (utils.HIGHLIGHT)
+        if (utils.isHighlight())
             appModel.AdvantageShoppingApplication().SIGNOUTLabel().highlight();
         appModel.AdvantageShoppingApplication().SIGNOUTLabel().tap();
 
-        if (utils.HIGHLIGHT)
+        if (utils.isHighlight())
             appModel.AdvantageShoppingApplication().YesButton().highlight();
         appModel.AdvantageShoppingApplication().YesButton().tap();
+    }
+
+    private void signIn() throws GeneralLeanFtException {
+        Logging.logMessage ("Tap login label", Logging.LOG_LEVEL.INFO);
+        if (utils.isHighlight())
+            appModel.AdvantageShoppingApplication().LOGINLabel().highlight();
+        appModel.AdvantageShoppingApplication().LOGINLabel().tap();
+
+        Logging.logMessage ("Type name", Logging.LOG_LEVEL.INFO);
+        if (utils.isHighlight())
+            appModel.AdvantageShoppingApplication().USERNAMEEditField().highlight();
+        appModel.AdvantageShoppingApplication().USERNAMEEditField().setText(userName);
+
+        Logging.logMessage ("Type password", Logging.LOG_LEVEL.INFO);
+        if (utils.isHighlight())
+            appModel.AdvantageShoppingApplication().PASSWORDEditField().highlight();
+        appModel.AdvantageShoppingApplication().PASSWORDEditField().setSecure(userPassword);
+
+        Logging.logMessage ("Tap login button", Logging.LOG_LEVEL.INFO);
+        if (utils.isHighlight())
+            appModel.AdvantageShoppingApplication().LOGINButton().highlight();
+        appModel.AdvantageShoppingApplication().LOGINButton().tap();
+    }
+
+    private void openMenu() throws GeneralLeanFtException{
+        Logging.logMessage("Open menu", Logging.LOG_LEVEL.INFO);
+        if (utils.isHighlight())
+            appModel.AdvantageShoppingApplication().MenuButton().highlight();
+        appModel.AdvantageShoppingApplication().MenuButton().tap();
     }
 }

@@ -7,6 +7,11 @@
     <name>LeanFT TestNG Test</name>
     <description>LeanFT TestNG Test</description>
 
+    <properties>
+        <lft.ver>14.50.0</lft.ver>
+        <utils.ver>1.3</utils.ver>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.testng</groupId>
@@ -17,31 +22,31 @@
         <dependency>
             <groupId>com.hp.lft</groupId>
             <artifactId>sdk</artifactId>
-            <version>14.2.0</version>
+            <version>${lft.ver}</version>
         </dependency>
 
         <dependency>
             <groupId>com.hp.lft</groupId>
             <artifactId>report</artifactId>
-            <version>14.2.0</version>
+            <version>${lft.ver}</version>
         </dependency>
 
         <dependency>
             <groupId>com.hp.lft</groupId>
             <artifactId>unittesting</artifactId>
-            <version>14.2.0</version>
+            <version>${lft.ver}</version>
         </dependency>
 
         <dependency>
             <groupId>com.hp.lft</groupId>
             <artifactId>verifications</artifactId>
-            <version>14.2.0</version>
+            <version>${lft.ver}</version>
         </dependency>
 
         <dependency>
             <groupId>com.mf</groupId>
-            <artifactId>MCUtilities</artifactId>
-            <version>4.0.0</version>
+            <artifactId>utils</artifactId>
+            <version>${utils.ver}-${lft.ver}</version>
         </dependency>
     </dependencies>
 
@@ -81,6 +86,19 @@
                                 <source>appmodels</source>
                             </sources>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.hpe.lft</groupId>
+                <artifactId>appmodel-generator-mojo</artifactId>
+                <version>14.50.0</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

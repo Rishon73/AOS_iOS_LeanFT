@@ -32,12 +32,12 @@ public class LeanFtTest extends UnitTestClassBase {
     @BeforeMethod
     public void beforeMethod() throws Exception {
         Logging.logMessage("Enter setUp() method ", Logging.LOG_LEVEL.INFO );
-        utils.setInstallApp(false);
-        utils.setUninstallApp(false);
-        utils.setHighlight(true);
         utils.setAppIdentifier("com.Advantage.iShopping");
         utils.setAppVersion("1.1.4");
         utils.setPackaged(true);
+        utils.setInstallApp(false);
+        utils.setUninstallApp(false);
+        utils.setHighlight(true);
 
         noProblem = true;
 
@@ -48,7 +48,7 @@ public class LeanFtTest extends UnitTestClassBase {
             deviceDescription.setOsVersion(">=9.0.0");
 
             utils.lockDevice(deviceDescription, MobileLabUtils.LabType.MC);
-            //utils.lockDeviceById("8a05bbf719c5a6840177ad62b88674ee53893590");
+            //utils.lockDeviceById("8a05bbf719c5a6840177ad62b88674ee53893590", MobileLabUtils.LabType.MC);
 
             device = utils.getDevice();
             if (device != null) {

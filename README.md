@@ -23,5 +23,5 @@ Note that you may need to change the user name and password. The scrip uses the 
 
 Important Note:
 ---------------
-**Please refer to the https://github.com/Rishon73/MCUtils README.md for MCUtils.jar installation instruction***
+**Please refer to the https://github.com/Rishon73/MCUtils README.md for MCUtils.jar installation instruction**
 

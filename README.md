@@ -1,5 +1,5 @@
 
- AOS_iOS_UFTPro
+## AOS_iOS_UFTPro
 
 LeanFT Java script with TestNG framework.
 
@@ -9,7 +9,7 @@ For parallel executions use the @Test annotaion:
 
 ---------------
 
-* **LeanFT 14.50*
+* **LeanFT 14.50**
 
 * **MC 2.80**
 

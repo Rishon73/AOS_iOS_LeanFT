@@ -9,11 +9,11 @@ For parallel executions use the @Test annotaion:
 
 ---------------
 
-**LeanFT 14.50
+* **LeanFT 14.50*
 
-**MC 2.80
+* **MC 2.80**
 
-**AOS for iOS v1.1.4
+* **AOS for iOS v1.1.4**
 
 ---------------
 
@@ -23,5 +23,5 @@ Note that you may need to change the user name and password. The scrip uses the 
 
 Important Note:
 ---------------
-<b>Please refer to the https://github.com/Rishon73/MCUtils README.md for MCUtils.jar installation instruction </b>
+**Please refer to the https://github.com/Rishon73/MCUtils README.md for MCUtils.jar installation instruction***
 

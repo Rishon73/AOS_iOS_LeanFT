@@ -16,7 +16,7 @@ public class LeanFtTest extends UnitTestClassBase {
 
     private boolean noProblem;
     private Device device;
-    private static AppModelAOS_iOS appModel;
+    private static appModel appModel;
     private MobileLabUtils utils = new MobileLabUtils();
     private String userName = "Shahar";
     private String userPassword  = "460d4691b2f164b933e1476fa1";
@@ -32,12 +32,22 @@ public class LeanFtTest extends UnitTestClassBase {
     @BeforeMethod
     public void beforeMethod() throws Exception {
         Logging.logMessage("Enter setUp() method ", Logging.LOG_LEVEL.INFO );
-        utils.setAppIdentifier("com.Advantage.iShopping");
-        utils.setAppVersion("1.1.4");
+        //utils.setAppIdentifier("com.Advantage.iShopping");
+        utils.setAppIdentifier("com.mf.iShopping");
+        utils.setAppVersion("1.1.5");
         utils.setPackaged(true);
-        utils.setInstallApp(false);
+        utils.setInstallApp(true);
         utils.setUninstallApp(false);
         utils.setHighlight(true);
+
+        String appVersion = System.getProperty("appVersion");
+        if (appVersion != null) utils.setAppVersion(appVersion);
+
+        String appIdentifier = System.getProperty("appIdentifier");
+        if (appIdentifier != null) utils.setAppIdentifier(appIdentifier);
+
+        String appModelClass = System.getProperty("appModelClass");
+        if (appModelClass == null) appModelClass = "AOS_iOS_115";
 
         noProblem = true;
 
@@ -45,14 +55,15 @@ public class LeanFtTest extends UnitTestClassBase {
             DeviceDescription deviceDescription = new DeviceDescription();
 
             deviceDescription.setOsType("IOS");
-            deviceDescription.setOsVersion(">=9.0.0");
+            deviceDescription.setOsVersion(">=11.3.0");
+            deviceDescription.setName("iPhone 8");
 
-            utils.lockDevice(deviceDescription, MobileLabUtils.LabType.MC);
-            //utils.lockDeviceById("8a05bbf719c5a6840177ad62b88674ee53893590", MobileLabUtils.LabType.MC);
+            //utils.lockDevice(deviceDescription, MobileLabUtils.LabType.MC);
+            utils.lockDeviceById("ed2ff5276810f2265b87cb2d58acc7b9246aa5c4", MobileLabUtils.LabType.MC);
 
             device = utils.getDevice();
             if (device != null) {
-                appModel = new AppModelAOS_iOS(device);
+                appModel = new appModel(device);
                 utils.setApp();
 
                 Logging.logMessage ("Allocated device: \"" + device.getName() + "\" (" + device.getId() + "), Model :"
@@ -89,6 +100,12 @@ public class LeanFtTest extends UnitTestClassBase {
         }
 
         try {
+            if (utils.isInstallApp() && appModel.HomeApplication().AllowButton().exists(5)) {
+                if (utils.isHighlight())
+                    appModel.HomeApplication().AllowButton().highlight();
+                appModel.HomeApplication().AllowButton().tap();
+            }
+
             Logging.logMessage ("Tap 'Open Menu'", Logging.LOG_LEVEL.INFO);
             openMenu();
 
@@ -111,8 +128,8 @@ public class LeanFtTest extends UnitTestClassBase {
 
             Logging.logMessage ("Select a laptop", Logging.LOG_LEVEL.INFO);
             if (utils.isHighlight())
-                appModel.AdvantageShoppingApplication().SelectedLaptop4().highlight();
-            appModel.AdvantageShoppingApplication().SelectedLaptop4().tap();
+                appModel.AdvantageShoppingApplication().SelectedLaptop().highlight();
+            appModel.AdvantageShoppingApplication().SelectedItem().tap();
 
             Logging.logMessage ("Tap 'Add to Cart' button", Logging.LOG_LEVEL.INFO);
             if (utils.isHighlight())
@@ -120,7 +137,7 @@ public class LeanFtTest extends UnitTestClassBase {
             appModel.AdvantageShoppingApplication().ADDTOCARTButton().tap();
             utils.windowSync(1500);
 
-            Logging.logMessage ("Tap the back button", Logging.LOG_LEVEL.INFO);
+            /*Logging.logMessage ("Tap the back button", Logging.LOG_LEVEL.INFO);
             if (utils.isHighlight())
                 appModel.AdvantageShoppingApplication().BackButton().highlight();
             appModel.AdvantageShoppingApplication().BackButton().tap();
@@ -131,12 +148,17 @@ public class LeanFtTest extends UnitTestClassBase {
             Logging.logMessage ("Tap 'Open Cart'", Logging.LOG_LEVEL.INFO);
             if (utils.isHighlight())
                 appModel.AdvantageShoppingApplication().OpenCart().highlight();
-            appModel.AdvantageShoppingApplication().OpenCart().tap();
+            appModel.AdvantageShoppingApplication().OpenCart().tap();*/
+
+            Logging.logMessage("Navigate to cart", Logging.LOG_LEVEL.INFO);
+            if (utils.isHighlight())
+                appModel.AdvantageShoppingApplication().cartIconButton().highlight();
+            appModel.AdvantageShoppingApplication().cartIconButton().tap();
 
             Logging.logMessage ("Tap the checkout button", Logging.LOG_LEVEL.INFO);
             if (utils.isHighlight())
-                appModel.AdvantageShoppingApplication().CHECKOUTPAYButton().highlight();
-            appModel.AdvantageShoppingApplication().CHECKOUTPAYButton().tap();
+                appModel.AdvantageShoppingApplication().CHECKOUTButton().highlight();
+            appModel.AdvantageShoppingApplication().CHECKOUTButton().tap();
 
             Logging.logMessage ("Tap the pay now button", Logging.LOG_LEVEL.INFO);
             if (utils.isHighlight())
@@ -165,8 +187,8 @@ public class LeanFtTest extends UnitTestClassBase {
         appModel.AdvantageShoppingApplication().SIGNOUTLabel().tap();
 
         if (utils.isHighlight())
-            appModel.AdvantageShoppingApplication().YesButton().highlight();
-        appModel.AdvantageShoppingApplication().YesButton().tap();
+            appModel.AdvantageShoppingApplication().SignOutYesButton().highlight();
+        appModel.AdvantageShoppingApplication().SignOutYesButton().tap();
     }
 
     private void signIn() throws GeneralLeanFtException {
@@ -177,13 +199,13 @@ public class LeanFtTest extends UnitTestClassBase {
 
         Logging.logMessage ("Type name", Logging.LOG_LEVEL.INFO);
         if (utils.isHighlight())
-            appModel.AdvantageShoppingApplication().USERNAMEEditField().highlight();
-        appModel.AdvantageShoppingApplication().USERNAMEEditField().setText(userName);
+            appModel.AdvantageShoppingApplication().UserNameField().highlight();
+        appModel.AdvantageShoppingApplication().UserNameField().setText(userName);
 
         Logging.logMessage ("Type password", Logging.LOG_LEVEL.INFO);
         if (utils.isHighlight())
-            appModel.AdvantageShoppingApplication().PASSWORDEditField().highlight();
-        appModel.AdvantageShoppingApplication().PASSWORDEditField().setSecure(userPassword);
+            appModel.AdvantageShoppingApplication().PasswordField().highlight();
+        appModel.AdvantageShoppingApplication().PasswordField().setSecure(userPassword);
 
         Logging.logMessage ("Tap login button", Logging.LOG_LEVEL.INFO);
         if (utils.isHighlight())

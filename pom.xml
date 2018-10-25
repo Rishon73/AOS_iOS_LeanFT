@@ -48,14 +48,19 @@
             <artifactId>utils</artifactId>
             <version>${utils.ver}-${lft.ver}</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.mf</groupId>
+            <artifactId>iOSAppModel</artifactId>
+            <version>${jar.version}</version>
+        </dependency>
     </dependencies>
 
     <repositories>
-        <!--<repository>
-                <id>Your repository's ID</id>
-                <name>Your repository's name</name>
-                <url>URL of the repository containing the LeanFT jar files</url>
-            </repository>-->
+        <repository>
+            <id>TestFactory</id>
+            <url>http://maven-repo.tvlport.com:8082/nexus/content/repositories/TestFactory</url>
+        </repository>
     </repositories>
 
     <build>
@@ -136,7 +141,50 @@
                         </lifecycleMappingMetadata>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.19.1</version>
+                    <configuration>
+                        <argLine>${jvm.options}</argLine>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
+    <profiles>
+
+        <!-- This ptofile if for the 'com.Advantage.iShopping' version  -->
+        <profile>
+            <id>AppModel1141</id>
+            <properties>
+                <jar.version>1141</jar.version>
+                <app.version>1.1.4</app.version>
+                <app.identifier>com.Advantage.iShopping</app.identifier>
+                <appModel.calss>AppModelAOS_iOS</appModel.calss>
+                <jvm.options>-DappVersion="${app.version}" -DappIdentifier="${app.identifier}"</jvm.options>
+            </properties>
+        </profile>
+        <profile>
+            <id>AppModel114</id>
+            <properties>
+                <jar.version>1.1.4</jar.version>
+                <app.version>1.1.4</app.version>
+                <app.identifier>com.mf.iShopping</app.identifier>
+                <appModel.calss>AOS_iOS_114</appModel.calss>
+                <jvm.options>-DappVersion="${app.version}" -DappIdentifier="${app.identifier}"</jvm.options>
+            </properties>
+        </profile>
+        <profile>
+            <id>AppModel115</id>
+            <properties>
+                <jar.version>115</jar.version>
+                <app.version>1.1.5</app.version>
+                <app.identifier>com.mf.iShopping</app.identifier>
+                <appModel.calss>AOS_iOS_115</appModel.calss>
+                <jvm.options>-DappVersion="${app.version}" -DappIdentifier="${app.identifier}" -DappModelClass="${appModel.calss}"</jvm.options>
+            </properties>
+        </profile>
+    </profiles>
+
 </project>

@@ -21,7 +21,8 @@ It uses Advantage Online Shopping iOS app to purchase an item.
 
 Note that you may need to change the user name and password. The scrip uses the setSecure method to encrypt the password. Use the tool from the LeanFT > Tools menu in your IDE or from the Windows Start menu.
 
-Important Note:
+Important Notes:
 ---------------
-**Please refer to the https://github.com/Rishon73/MCUtils README.md for MCUtils.jar installation instruction**
+* Please refer to the https://github.com/Rishon73/MCUtils README.md for MCUtils.jar installation instruction
+* To modify the Application Models jar files, clone and change this project https://github.com/Rishon73/aos-ios-models, next run  Maven install in the Maven Lifecycle - this will install the Applocation Model jars in your local maven repo
 

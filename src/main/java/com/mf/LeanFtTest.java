@@ -12,6 +12,8 @@ import com.mf.utils.*;
 
 import unittesting.*;
 
+import java.util.logging.Logger;
+
 public class LeanFtTest extends UnitTestClassBase {
 
     private boolean noProblem;
@@ -37,7 +39,7 @@ public class LeanFtTest extends UnitTestClassBase {
         utils.setAppVersion("1.1.5");
         utils.setPackaged(true);
         utils.setInstallApp(true);
-        utils.setUninstallApp(false);
+        utils.setUninstallApp(true);
         utils.setHighlight(true);
 
         String appVersion = System.getProperty("appVersion");
@@ -47,7 +49,6 @@ public class LeanFtTest extends UnitTestClassBase {
         if (appIdentifier != null) utils.setAppIdentifier(appIdentifier);
 
         String appModelClass = System.getProperty("appModelClass");
-        if (appModelClass == null) appModelClass = "AOS_iOS_115";
 
         noProblem = true;
 
@@ -55,11 +56,11 @@ public class LeanFtTest extends UnitTestClassBase {
             DeviceDescription deviceDescription = new DeviceDescription();
 
             deviceDescription.setOsType("IOS");
-            deviceDescription.setOsVersion(">=11.3.0");
-            deviceDescription.setName("iPhone 8");
+            deviceDescription.setOsVersion(">=12.0");
+            //deviceDescription.setName("iPhone 8");
 
-            //utils.lockDevice(deviceDescription, MobileLabUtils.LabType.MC);
-            utils.lockDeviceById("ed2ff5276810f2265b87cb2d58acc7b9246aa5c4", MobileLabUtils.LabType.MC);
+            utils.lockDevice(deviceDescription, MobileLabUtils.LabType.MC);
+            //utils.lockDeviceById("ed2ff5276810f2265b87cb2d58acc7b9246aa5c4", MobileLabUtils.LabType.MC);
 
             device = utils.getDevice();
             if (device != null) {
@@ -100,10 +101,15 @@ public class LeanFtTest extends UnitTestClassBase {
         }
 
         try {
-            if (utils.isInstallApp() && appModel.HomeApplication().AllowButton().exists(5)) {
-                if (utils.isHighlight())
-                    appModel.HomeApplication().AllowButton().highlight();
-                appModel.HomeApplication().AllowButton().tap();
+            if (utils.isInstallApp()) {
+                Logging.logMessage("Checking if the 'allow' dialog is displayed...", Logging.LOG_LEVEL.INFO);
+                if (appModel.HomeApplication().AllowButton().exists(3)) {
+                    //if (utils.isHighlight())
+                    //    appModel.HomeApplication().AllowButton().highlight();
+
+                    Logging.logMessage("Tap 'Allow' app to access location", Logging.LOG_LEVEL.INFO);
+                    appModel.HomeApplication().AllowButton().tap();
+                }
             }
 
             Logging.logMessage ("Tap 'Open Menu'", Logging.LOG_LEVEL.INFO);
@@ -135,7 +141,7 @@ public class LeanFtTest extends UnitTestClassBase {
             if (utils.isHighlight())
                 appModel.AdvantageShoppingApplication().ADDTOCARTButton().highlight();
             appModel.AdvantageShoppingApplication().ADDTOCARTButton().tap();
-            utils.windowSync(1500);
+            //utils.windowSync(1500);
 
             /*Logging.logMessage ("Tap the back button", Logging.LOG_LEVEL.INFO);
             if (utils.isHighlight())
@@ -165,6 +171,11 @@ public class LeanFtTest extends UnitTestClassBase {
                 appModel.AdvantageShoppingApplication().PAYNOWButton().highlight();
             appModel.AdvantageShoppingApplication().PAYNOWButton().tap();
 
+            /*Logging.logMessage ("Before dismissing the dialog, let's check the message...", Logging.LOG_LEVEL.INFO);
+            appModel.AdvantageShoppingApplication().TrackingInfoLabel().highlight();
+            String trackingMsg = appModel.AdvantageShoppingApplication().TrackingInfoLabel().getVisibleText();
+            Logging.logMessage (trackingMsg, Logging.LOG_LEVEL.INFO);*/
+
             Logging.logMessage ("Tap OK", Logging.LOG_LEVEL.INFO);
             if (utils.isHighlight())
                 appModel.AdvantageShoppingApplication().OkButton().highlight();
@@ -172,6 +183,11 @@ public class LeanFtTest extends UnitTestClassBase {
 
             openMenu();
             signOut();
+
+            if (utils.isUninstallApp()) {
+                Logging.logMessage("Un-installing app: " + utils.getApp().getName(), Logging.LOG_LEVEL.INFO);
+                utils.getApp().uninstall();
+            }
 
             Logging.logMessage ("********** Test completed successfully **********", Logging.LOG_LEVEL.INFO);
 

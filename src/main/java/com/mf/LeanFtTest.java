@@ -22,6 +22,7 @@ public class LeanFtTest extends UnitTestClassBase {
     private MobileLabUtils utils = new MobileLabUtils();
     private String userName = "Shahar";
     private String userPassword  = "460d4691b2f164b933e1476fa1";
+    private boolean doSignInUsingCredentials = false;
 
     @BeforeClass
     public void beforeClass() throws Exception {
@@ -38,9 +39,9 @@ public class LeanFtTest extends UnitTestClassBase {
         utils.setAppIdentifier("com.mf.iShopping");
         utils.setAppVersion("1.1.5");
         utils.setPackaged(true);
-        utils.setInstallApp(true);
-        utils.setUninstallApp(true);
-        utils.setHighlight(true);
+        utils.setInstallApp(false);
+        utils.setUninstallApp(false);
+        utils.setHighlight(false);
 
         String appVersion = System.getProperty("appVersion");
         if (appVersion != null) utils.setAppVersion(appVersion);
@@ -48,15 +49,13 @@ public class LeanFtTest extends UnitTestClassBase {
         String appIdentifier = System.getProperty("appIdentifier");
         if (appIdentifier != null) utils.setAppIdentifier(appIdentifier);
 
-        String appModelClass = System.getProperty("appModelClass");
-
         noProblem = true;
 
         try {
             DeviceDescription deviceDescription = new DeviceDescription();
 
             deviceDescription.setOsType("IOS");
-            deviceDescription.setOsVersion(">=12.0");
+            deviceDescription.setOsVersion(">=11.4.0");
             //deviceDescription.setName("iPhone 8");
 
             utils.lockDevice(deviceDescription, MobileLabUtils.LabType.MC);
@@ -69,14 +68,13 @@ public class LeanFtTest extends UnitTestClassBase {
 
                 Logging.logMessage ("Allocated device: \"" + device.getName() + "\" (" + device.getId() + "), Model :"
                         + device.getModel() + ", OS: " + device.getOSType() + " version: " + device.getOSVersion()
-                        + ", manufacturer: " + device.getManufacturer() + ". App in use: \"" + utils.getApp().getName()
-                        + "\" v" + utils.getApp().getVersion(),Logging. LOG_LEVEL.INFO);
+                        + ", manufacturer: " + device.getManufacturer(), Logging. LOG_LEVEL.INFO);
 
                 if (utils.isInstallApp()) {
-                    Logging.logMessage ("Installing app: " + utils.getApp().getName(), Logging.LOG_LEVEL.INFO);
+                    Logging.logMessage ("Installing app: " + utils.getApp().getName() + " v" + utils.getAppVersion(), Logging.LOG_LEVEL.INFO);
                     utils.getApp().install();
                 } else {
-                    Logging.logMessage ("Restarting app: " + utils.getApp().getName(), Logging.LOG_LEVEL.INFO);
+                    Logging.logMessage ("Restarting app: " + utils.getApp().getName() + " v" + utils.getAppVersion(), Logging.LOG_LEVEL.INFO);
                     utils.getApp().restart();
                 }
             } else {
@@ -101,22 +99,14 @@ public class LeanFtTest extends UnitTestClassBase {
         }
 
         try {
-            if (utils.isInstallApp()) {
-                Logging.logMessage("Checking if the 'allow' dialog is displayed...", Logging.LOG_LEVEL.INFO);
-                if (appModel.HomeApplication().AllowButton().exists(3)) {
-                    //if (utils.isHighlight())
-                    //    appModel.HomeApplication().AllowButton().highlight();
-
-                    Logging.logMessage("Tap 'Allow' app to access location", Logging.LOG_LEVEL.INFO);
-                    appModel.HomeApplication().AllowButton().tap();
-                }
-            }
+            if (utils.isInstallApp())
+                postInstallActions();
 
             Logging.logMessage ("Tap 'Open Menu'", Logging.LOG_LEVEL.INFO);
             openMenu();
 
             Logging.logMessage ("Check if the user signed in", Logging.LOG_LEVEL.INFO);
-            if (appModel.AdvantageShoppingApplication().SIGNOUTLabel().exists(5)) {
+            if (appModel.AdvantageShoppingApplication().SIGNOUTLabel().exists(3)) {
                 signOut();
                 utils.windowSync(2000);
 
@@ -141,20 +131,6 @@ public class LeanFtTest extends UnitTestClassBase {
             if (utils.isHighlight())
                 appModel.AdvantageShoppingApplication().ADDTOCARTButton().highlight();
             appModel.AdvantageShoppingApplication().ADDTOCARTButton().tap();
-            //utils.windowSync(1500);
-
-            /*Logging.logMessage ("Tap the back button", Logging.LOG_LEVEL.INFO);
-            if (utils.isHighlight())
-                appModel.AdvantageShoppingApplication().BackButton().highlight();
-            appModel.AdvantageShoppingApplication().BackButton().tap();
-
-            Logging.logMessage ("Tap 'Open Menu'", Logging.LOG_LEVEL.INFO);
-            openMenu();
-
-            Logging.logMessage ("Tap 'Open Cart'", Logging.LOG_LEVEL.INFO);
-            if (utils.isHighlight())
-                appModel.AdvantageShoppingApplication().OpenCart().highlight();
-            appModel.AdvantageShoppingApplication().OpenCart().tap();*/
 
             Logging.logMessage("Navigate to cart", Logging.LOG_LEVEL.INFO);
             if (utils.isHighlight())
@@ -170,11 +146,6 @@ public class LeanFtTest extends UnitTestClassBase {
             if (utils.isHighlight())
                 appModel.AdvantageShoppingApplication().PAYNOWButton().highlight();
             appModel.AdvantageShoppingApplication().PAYNOWButton().tap();
-
-            /*Logging.logMessage ("Before dismissing the dialog, let's check the message...", Logging.LOG_LEVEL.INFO);
-            appModel.AdvantageShoppingApplication().TrackingInfoLabel().highlight();
-            String trackingMsg = appModel.AdvantageShoppingApplication().TrackingInfoLabel().getVisibleText();
-            Logging.logMessage (trackingMsg, Logging.LOG_LEVEL.INFO);*/
 
             Logging.logMessage ("Tap OK", Logging.LOG_LEVEL.INFO);
             if (utils.isHighlight())
@@ -207,8 +178,45 @@ public class LeanFtTest extends UnitTestClassBase {
         appModel.AdvantageShoppingApplication().SignOutYesButton().tap();
     }
 
-    private void signIn() throws GeneralLeanFtException {
-        Logging.logMessage ("Tap login label", Logging.LOG_LEVEL.INFO);
+    private void signIn() throws GeneralLeanFtException, InterruptedException {
+        int appVersion = Integer.parseInt(utils.getAppVersion().replace(".", ""));
+
+        // AOS v1.1.5 was the first version fingerprint authentication was introduced
+        if (appVersion < 115)
+            signInWithCredentials();
+        else {
+            /*
+                If the app was installed for **this** test execution:
+                First, login with credentials
+                Next, we need to enable the Biometric login
+                Lastly, navigate to the HOME page
+            */
+            if (utils.isInstallApp() || doSignInUsingCredentials) {
+                signInWithCredentials();
+                utils.windowSync(5000);
+
+                if (utils.isHighlight())
+                    appModel.AdvantageShoppingApplication().BiometricYESButton().highlight();
+                appModel.AdvantageShoppingApplication().BiometricYESButton().tap();
+
+                openMenu();
+                if (utils.isHighlight())
+                    appModel.AdvantageShoppingApplication().HOMELabel().highlight();
+                appModel.AdvantageShoppingApplication().HOMELabel().tap();
+            }
+            /* if the app was installed before then just sign in with Fingerprint */
+            else {
+                //enableFingerPrintAuthentication();
+                signInWithFingerPrintAuthentication();
+            }
+        }
+    }
+
+    /*
+    Sign in using user credentials
+    */
+    private void signInWithCredentials() throws GeneralLeanFtException {
+        Logging.logMessage ("Tap login label (credentials)", Logging.LOG_LEVEL.INFO);
         if (utils.isHighlight())
             appModel.AdvantageShoppingApplication().LOGINLabel().highlight();
         appModel.AdvantageShoppingApplication().LOGINLabel().tap();
@@ -229,10 +237,61 @@ public class LeanFtTest extends UnitTestClassBase {
         appModel.AdvantageShoppingApplication().LOGINButton().tap();
     }
 
+    /*
+    Sign in using Fingerprint
+    */
+    private void signInWithFingerPrintAuthentication() throws GeneralLeanFtException, InterruptedException {
+            Logging.logMessage ("Tap login label (fingerprint auth)", Logging.LOG_LEVEL.INFO);
+            if (utils.isHighlight())
+                appModel.AdvantageShoppingApplication().LOGINLabel().highlight();
+            appModel.AdvantageShoppingApplication().LOGINLabel().tap();
+
+            utils.getApp().simulateAuthentication().succeed();
+        utils.windowSync(2500);
+    }
+
+    /*
+    Enable the Fingerprint option:
+    Set the Toggle
+    Check if the 'need to login before activating...' message
+        If there, sign in with credentials
+        Accept the biometric login message
+    */
+    private void enableFingerPrintAuthentication() throws GeneralLeanFtException, InterruptedException {
+        Logging.logMessage("Navigate to Settings", Logging.LOG_LEVEL.INFO);
+        if (utils.isHighlight())
+            appModel.AdvantageShoppingApplication().SETTINGSLabel().highlight();
+        appModel.AdvantageShoppingApplication().SETTINGSLabel().tap();
+
+        Logging.logMessage("Toggle...", Logging.LOG_LEVEL.INFO);
+        if (utils.isHighlight())
+            appModel.AdvantageShoppingApplication().LoginUsingFingerprintToggle().highlight();
+        appModel.AdvantageShoppingApplication().LoginUsingFingerprintToggle().set(true);
+
+        Logging.logMessage("Label message: " + appModel.AdvantageShoppingApplication().CredentialsFirstLabel().getText(), Logging.LOG_LEVEL.INFO);
+        if (appModel.AdvantageShoppingApplication().CredentialsFirstLabelOkButton().exists(2)) {
+            appModel.AdvantageShoppingApplication().CredentialsFirstLabelOkButton().tap();
+            openMenu();
+            signInWithCredentials();
+            utils.windowSync(3000);
+            appModel.AdvantageShoppingApplication().BiometricYESButton().tap();
+        }
+        else // if the message above doesn't exist, we need to re-set the toggle
+            appModel.AdvantageShoppingApplication().LoginUsingFingerprintToggle().set(true);
+    }
+
     private void openMenu() throws GeneralLeanFtException{
         Logging.logMessage("Open menu", Logging.LOG_LEVEL.INFO);
         if (utils.isHighlight())
             appModel.AdvantageShoppingApplication().MenuButton().highlight();
         appModel.AdvantageShoppingApplication().MenuButton().tap();
+    }
+
+    private void postInstallActions() throws  GeneralLeanFtException {
+        Logging.logMessage("Checking if the 'allow' dialog is displayed...", Logging.LOG_LEVEL.INFO);
+        if (appModel.HomeApplication().AllowButton().exists(3)) {
+            Logging.logMessage("Tap 'Allow' app to access location", Logging.LOG_LEVEL.INFO);
+            appModel.HomeApplication().AllowButton().tap();
+        }
     }
 }

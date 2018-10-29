@@ -12,17 +12,19 @@ import com.mf.utils.*;
 
 import unittesting.*;
 
-import java.util.logging.Logger;
+import javax.xml.ws.handler.LogicalHandler;
 
 public class LeanFtTest extends UnitTestClassBase {
-
     private boolean noProblem;
     private Device device;
     private static appModel appModel;
     private MobileLabUtils utils = new MobileLabUtils();
     private String userName = "Shahar";
     private String userPassword  = "460d4691b2f164b933e1476fa1";
-    private boolean doSignInUsingCredentials = false;
+    private int counter = 0;
+    private String osType = "IOS";
+    private String osVersion = ">=11.3.0";
+    private String osModel = "iPhone";
 
     @BeforeClass
     public void beforeClass() throws Exception {
@@ -35,12 +37,11 @@ public class LeanFtTest extends UnitTestClassBase {
     @BeforeMethod
     public void beforeMethod() throws Exception {
         Logging.logMessage("Enter setUp() method ", Logging.LOG_LEVEL.INFO );
-        //utils.setAppIdentifier("com.Advantage.iShopping");
         utils.setAppIdentifier("com.mf.iShopping");
         utils.setAppVersion("1.1.5");
         utils.setPackaged(true);
-        utils.setInstallApp(false);
-        utils.setUninstallApp(false);
+        utils.setInstallApp(true);
+        utils.setUninstallApp(true);
         utils.setHighlight(false);
 
         String appVersion = System.getProperty("appVersion");
@@ -52,35 +53,9 @@ public class LeanFtTest extends UnitTestClassBase {
         noProblem = true;
 
         try {
-            DeviceDescription deviceDescription = new DeviceDescription();
 
-            deviceDescription.setOsType("IOS");
-            deviceDescription.setOsVersion(">=11.4.0");
-            //deviceDescription.setName("iPhone 8");
+            initLabResources();
 
-            utils.lockDevice(deviceDescription, MobileLabUtils.LabType.MC);
-            //utils.lockDeviceById("ed2ff5276810f2265b87cb2d58acc7b9246aa5c4", MobileLabUtils.LabType.MC);
-
-            device = utils.getDevice();
-            if (device != null) {
-                appModel = new appModel(device);
-                utils.setApp();
-
-                Logging.logMessage ("Allocated device: \"" + device.getName() + "\" (" + device.getId() + "), Model :"
-                        + device.getModel() + ", OS: " + device.getOSType() + " version: " + device.getOSVersion()
-                        + ", manufacturer: " + device.getManufacturer(), Logging. LOG_LEVEL.INFO);
-
-                if (utils.isInstallApp()) {
-                    Logging.logMessage ("Installing app: " + utils.getApp().getName() + " v" + utils.getAppVersion(), Logging.LOG_LEVEL.INFO);
-                    utils.getApp().install();
-                } else {
-                    Logging.logMessage ("Restarting app: " + utils.getApp().getName() + " v" + utils.getAppVersion(), Logging.LOG_LEVEL.INFO);
-                    utils.getApp().restart();
-                }
-            } else {
-                Logging.logMessage ("Device couldn't be allocated, exiting script", Logging.LOG_LEVEL.ERROR);
-                noProblem = false;
-            }
         } catch (Exception ex) {
             Logging.logMessage ("Exception in setup(): " + ex.getMessage(), Logging.LOG_LEVEL.ERROR);
             noProblem = false;
@@ -97,6 +72,7 @@ public class LeanFtTest extends UnitTestClassBase {
             Assert.fail();
             return;
         }
+        counter++;
 
         try {
             if (utils.isInstallApp())
@@ -105,61 +81,32 @@ public class LeanFtTest extends UnitTestClassBase {
             Logging.logMessage ("Tap 'Open Menu'", Logging.LOG_LEVEL.INFO);
             openMenu();
 
-            Logging.logMessage ("Check if the user signed in", Logging.LOG_LEVEL.INFO);
-            if (appModel.AdvantageShoppingApplication().SIGNOUTLabel().exists(3)) {
-                signOut();
-                utils.windowSync(2000);
+            // if user logged in, sign him out
+            checkIfLoggedIn();
 
-                Logging.logMessage ("Tap 'Open Menu (after sign-out)'", Logging.LOG_LEVEL.INFO);
-                openMenu();
-                utils.windowSync(2000);
-            }
-
+            // do sign in
             signIn();
 
-            Logging.logMessage ("Select 'laptop' category", Logging.LOG_LEVEL.INFO);
-            if (utils.isHighlight())
-                appModel.AdvantageShoppingApplication().LAPTOPSLabel().highlight();
-            appModel.AdvantageShoppingApplication().LAPTOPSLabel().tap();
+            // hold for 10 seconds (just to demo sign in and sign out)
+            Logging.logMessage ("Waiting for 10 seconds... (instead of purchasing stuff)", Logging.LOG_LEVEL.INFO);
+            utils.windowSync(10000);
+            // runMainTest();
 
-            Logging.logMessage ("Select a laptop", Logging.LOG_LEVEL.INFO);
-            if (utils.isHighlight())
-                appModel.AdvantageShoppingApplication().SelectedLaptop().highlight();
-            appModel.AdvantageShoppingApplication().SelectedItem().tap();
-
-            Logging.logMessage ("Tap 'Add to Cart' button", Logging.LOG_LEVEL.INFO);
-            if (utils.isHighlight())
-                appModel.AdvantageShoppingApplication().ADDTOCARTButton().highlight();
-            appModel.AdvantageShoppingApplication().ADDTOCARTButton().tap();
-
-            Logging.logMessage("Navigate to cart", Logging.LOG_LEVEL.INFO);
-            if (utils.isHighlight())
-                appModel.AdvantageShoppingApplication().cartIconButton().highlight();
-            appModel.AdvantageShoppingApplication().cartIconButton().tap();
-
-            Logging.logMessage ("Tap the checkout button", Logging.LOG_LEVEL.INFO);
-            if (utils.isHighlight())
-                appModel.AdvantageShoppingApplication().CHECKOUTButton().highlight();
-            appModel.AdvantageShoppingApplication().CHECKOUTButton().tap();
-
-            Logging.logMessage ("Tap the pay now button", Logging.LOG_LEVEL.INFO);
-            if (utils.isHighlight())
-                appModel.AdvantageShoppingApplication().PAYNOWButton().highlight();
-            appModel.AdvantageShoppingApplication().PAYNOWButton().tap();
-
-            Logging.logMessage ("Tap OK", Logging.LOG_LEVEL.INFO);
-            if (utils.isHighlight())
-                appModel.AdvantageShoppingApplication().OkButton().highlight();
-            appModel.AdvantageShoppingApplication().OkButton().tap();
-
+            // do sign out after completing the test
             openMenu();
             signOut();
+
+            if (counter > 1)
+                return;
+
+            utils.setInstallApp(false);
+            test();
 
             if (utils.isUninstallApp()) {
                 Logging.logMessage("Un-installing app: " + utils.getApp().getName(), Logging.LOG_LEVEL.INFO);
                 utils.getApp().uninstall();
+                utils.setInstallApp(false);
             }
-
             Logging.logMessage ("********** Test completed successfully **********", Logging.LOG_LEVEL.INFO);
 
         } catch (ReplayObjectNotFoundException ronfex) {
@@ -169,6 +116,7 @@ public class LeanFtTest extends UnitTestClassBase {
     }
 
     private void signOut() throws GeneralLeanFtException {
+        Logging.logMessage("Signing out", Logging.LOG_LEVEL.INFO);
         if (utils.isHighlight())
             appModel.AdvantageShoppingApplication().SIGNOUTLabel().highlight();
         appModel.AdvantageShoppingApplication().SIGNOUTLabel().tap();
@@ -191,13 +139,18 @@ public class LeanFtTest extends UnitTestClassBase {
                 Next, we need to enable the Biometric login
                 Lastly, navigate to the HOME page
             */
-            if (utils.isInstallApp() || doSignInUsingCredentials) {
+            if (utils.isInstallApp()) {
                 signInWithCredentials();
                 utils.windowSync(5000);
 
+                Logging.logMessage ("Accept the 'fingerprint authentication' option", Logging.LOG_LEVEL.INFO);
                 if (utils.isHighlight())
                     appModel.AdvantageShoppingApplication().BiometricYESButton().highlight();
                 appModel.AdvantageShoppingApplication().BiometricYESButton().tap();
+
+                // Must authenticate with fingerprint to activate the feature for future usage
+                Logging.logMessage ("Do fingerprint authentication after credentials - to activate the feature", Logging.LOG_LEVEL.INFO);
+                utils.getApp().simulateAuthentication().succeed();
 
                 openMenu();
                 if (utils.isHighlight())
@@ -246,8 +199,9 @@ public class LeanFtTest extends UnitTestClassBase {
                 appModel.AdvantageShoppingApplication().LOGINLabel().highlight();
             appModel.AdvantageShoppingApplication().LOGINLabel().tap();
 
+            Logging.logMessage ("Do fingerprint authentication", Logging.LOG_LEVEL.INFO);
             utils.getApp().simulateAuthentication().succeed();
-        utils.windowSync(2500);
+            utils.windowSync(2500);
     }
 
     /*
@@ -268,6 +222,7 @@ public class LeanFtTest extends UnitTestClassBase {
             appModel.AdvantageShoppingApplication().LoginUsingFingerprintToggle().highlight();
         appModel.AdvantageShoppingApplication().LoginUsingFingerprintToggle().set(true);
 
+        /*
         Logging.logMessage("Label message: " + appModel.AdvantageShoppingApplication().CredentialsFirstLabel().getText(), Logging.LOG_LEVEL.INFO);
         if (appModel.AdvantageShoppingApplication().CredentialsFirstLabelOkButton().exists(2)) {
             appModel.AdvantageShoppingApplication().CredentialsFirstLabelOkButton().tap();
@@ -278,6 +233,7 @@ public class LeanFtTest extends UnitTestClassBase {
         }
         else // if the message above doesn't exist, we need to re-set the toggle
             appModel.AdvantageShoppingApplication().LoginUsingFingerprintToggle().set(true);
+         */
     }
 
     private void openMenu() throws GeneralLeanFtException{
@@ -292,6 +248,91 @@ public class LeanFtTest extends UnitTestClassBase {
         if (appModel.HomeApplication().AllowButton().exists(3)) {
             Logging.logMessage("Tap 'Allow' app to access location", Logging.LOG_LEVEL.INFO);
             appModel.HomeApplication().AllowButton().tap();
+        }
+    }
+
+    /*
+     This is the main test body
+    */
+    private void runMainTest() throws  GeneralLeanFtException {
+        Logging.logMessage ("Select 'laptop' category", Logging.LOG_LEVEL.INFO);
+        if (utils.isHighlight())
+            appModel.AdvantageShoppingApplication().LAPTOPSLabel().highlight();
+        appModel.AdvantageShoppingApplication().LAPTOPSLabel().tap();
+
+        Logging.logMessage ("Select a laptop", Logging.LOG_LEVEL.INFO);
+        if (utils.isHighlight())
+            appModel.AdvantageShoppingApplication().SelectedLaptop().highlight();
+        appModel.AdvantageShoppingApplication().SelectedItem().tap();
+
+        Logging.logMessage ("Tap 'Add to Cart' button", Logging.LOG_LEVEL.INFO);
+        if (utils.isHighlight())
+            appModel.AdvantageShoppingApplication().ADDTOCARTButton().highlight();
+        appModel.AdvantageShoppingApplication().ADDTOCARTButton().tap();
+
+        Logging.logMessage("Navigate to cart", Logging.LOG_LEVEL.INFO);
+        if (utils.isHighlight())
+            appModel.AdvantageShoppingApplication().cartIconButton().highlight();
+        appModel.AdvantageShoppingApplication().cartIconButton().tap();
+
+        Logging.logMessage ("Tap the checkout button", Logging.LOG_LEVEL.INFO);
+        if (utils.isHighlight())
+            appModel.AdvantageShoppingApplication().CHECKOUTButton().highlight();
+        appModel.AdvantageShoppingApplication().CHECKOUTButton().tap();
+
+        Logging.logMessage ("Tap the pay now button", Logging.LOG_LEVEL.INFO);
+        if (utils.isHighlight())
+            appModel.AdvantageShoppingApplication().PAYNOWButton().highlight();
+        appModel.AdvantageShoppingApplication().PAYNOWButton().tap();
+
+        Logging.logMessage ("Tap OK", Logging.LOG_LEVEL.INFO);
+        if (utils.isHighlight())
+            appModel.AdvantageShoppingApplication().OkButton().highlight();
+        appModel.AdvantageShoppingApplication().OkButton().tap();
+    }
+
+    private void initLabResources() throws GeneralLeanFtException {
+        DeviceDescription deviceDescription = new DeviceDescription();
+
+        deviceDescription.setOsType(osType);
+        deviceDescription.setOsVersion(osVersion);
+        deviceDescription.setModel(osModel);
+        //deviceDescription.setName("iPhone 8");
+
+        utils.lockDevice(deviceDescription, MobileLabUtils.LabType.MC);
+        //utils.lockDeviceById("ed2ff5276810f2265b87cb2d58acc7b9246aa5c4", MobileLabUtils.LabType.MC);
+
+        device = utils.getDevice();
+        if (device != null) {
+            appModel = new appModel(device);
+            utils.setApp();
+
+            Logging.logMessage("Allocated device: \"" + device.getName() + "\" (" + device.getId() + "), Model :"
+                    + device.getModel() + ", OS: " + device.getOSType() + " version: " + device.getOSVersion()
+                    + ", manufacturer: " + device.getManufacturer(), Logging.LOG_LEVEL.INFO);
+
+            if (utils.isInstallApp()) {
+                Logging.logMessage("Installing app: " + utils.getApp().getName() + " v" + utils.getAppVersion(), Logging.LOG_LEVEL.INFO);
+                utils.getApp().install();
+            } else {
+                Logging.logMessage("Restarting app: " + utils.getApp().getName() + " v" + utils.getAppVersion(), Logging.LOG_LEVEL.INFO);
+                utils.getApp().restart();
+            }
+        } else {
+            Logging.logMessage("Device couldn't be allocated, exiting script", Logging.LOG_LEVEL.ERROR);
+            noProblem = false;
+        }
+    }
+
+    private void checkIfLoggedIn() throws GeneralLeanFtException, InterruptedException {
+        Logging.logMessage ("Check if the user signed in", Logging.LOG_LEVEL.INFO);
+        if (appModel.AdvantageShoppingApplication().SIGNOUTLabel().exists(3)) {
+            signOut();
+            utils.windowSync(2000);
+
+            Logging.logMessage ("Tap 'Open Menu (after sign-out)'", Logging.LOG_LEVEL.INFO);
+            openMenu();
+            utils.windowSync(2000);
         }
     }
 }

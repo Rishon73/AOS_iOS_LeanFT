@@ -13,7 +13,7 @@ For parallel executions use the @Test annotaion:
 
 * **MC 2.80**
 
-* **AOS for iOS v1.1.4**
+* **AOS for iOS v1.1.4 and 1.1.5**
 
 ---------------
 

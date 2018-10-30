@@ -13,6 +13,7 @@ import com.mf.utils.*;
 import unittesting.*;
 
 import javax.xml.ws.handler.LogicalHandler;
+import java.util.Random;
 
 public class LeanFtTest extends UnitTestClassBase {
     private boolean noProblem;
@@ -150,7 +151,8 @@ public class LeanFtTest extends UnitTestClassBase {
 
                 // Must authenticate with fingerprint to activate the feature for future usage
                 Logging.logMessage ("Do fingerprint authentication after credentials - to activate the feature", Logging.LOG_LEVEL.INFO);
-                utils.getApp().simulateAuthentication().succeed();
+                signInWithFingerPrintAuthentication();
+                utils.windowSync(2500);
 
                 openMenu();
                 if (utils.isHighlight())
@@ -160,7 +162,10 @@ public class LeanFtTest extends UnitTestClassBase {
             /* if the app was installed before then just sign in with Fingerprint */
             else {
                 //enableFingerPrintAuthentication();
+                navigateToLogin();
                 signInWithFingerPrintAuthentication();
+                utils.windowSync(2500);
+
             }
         }
     }
@@ -170,9 +175,7 @@ public class LeanFtTest extends UnitTestClassBase {
     */
     private void signInWithCredentials() throws GeneralLeanFtException {
         Logging.logMessage ("Tap login label (credentials)", Logging.LOG_LEVEL.INFO);
-        if (utils.isHighlight())
-            appModel.AdvantageShoppingApplication().LOGINLabel().highlight();
-        appModel.AdvantageShoppingApplication().LOGINLabel().tap();
+        navigateToLogin();
 
         Logging.logMessage ("Type name", Logging.LOG_LEVEL.INFO);
         if (utils.isHighlight())
@@ -190,18 +193,36 @@ public class LeanFtTest extends UnitTestClassBase {
         appModel.AdvantageShoppingApplication().LOGINButton().tap();
     }
 
-    /*
-    Sign in using Fingerprint
-    */
-    private void signInWithFingerPrintAuthentication() throws GeneralLeanFtException, InterruptedException {
-            Logging.logMessage ("Tap login label (fingerprint auth)", Logging.LOG_LEVEL.INFO);
-            if (utils.isHighlight())
-                appModel.AdvantageShoppingApplication().LOGINLabel().highlight();
-            appModel.AdvantageShoppingApplication().LOGINLabel().tap();
+    private void signInWithFingerPrintAuthentication() throws GeneralLeanFtException {
+        Logging.logMessage("Do fingerprint authentication", Logging.LOG_LEVEL.INFO);
+        utils.getApp().simulateAuthentication().succeed();
+    }
 
-            Logging.logMessage ("Do fingerprint authentication", Logging.LOG_LEVEL.INFO);
-            utils.getApp().simulateAuthentication().succeed();
-            utils.windowSync(2500);
+    /*
+    SimulateAuthFailReason.FINGERPRINT_INCOMPLETE // only supported in Android
+    SimulateAuthFailReason.SENSOR_DIRTY // only supported in Android
+    SimulateAuthFailReason.NOT_RECOGNIZED
+    SimulateAuthFailReason.NOT_REGISTERED // only supported in iOS
+    SimulateAuthFailReason.LOCKOUT
+    */
+    private void signInWithFingerPrintAuthenticationFail(SimulateAuthFailReason reason) throws GeneralLeanFtException {
+        utils.getApp().simulateAuthentication().fail(reason);
+    }
+
+    private void signInWithFingerPrintAuthenticationFail(String reason) throws GeneralLeanFtException {
+        utils.getApp().simulateAuthentication().fail(reason);
+    }
+
+    /*
+    SimulateAuthCancelOrigin.SYSTEM
+    SimulateAuthCancelOrigin.USER
+    */
+    private void signInWithFingerPrintAuthenticationCancel(SimulateAuthCancelOrigin origin) throws GeneralLeanFtException {
+        utils.getApp().simulateAuthentication().cancel(origin);
+    }
+
+    private void signInWithFingerPrintAuthenticationCancel(String origin) throws GeneralLeanFtException {
+        utils.getApp().simulateAuthentication().cancel(origin);
     }
 
     /*
@@ -241,6 +262,12 @@ public class LeanFtTest extends UnitTestClassBase {
         if (utils.isHighlight())
             appModel.AdvantageShoppingApplication().MenuButton().highlight();
         appModel.AdvantageShoppingApplication().MenuButton().tap();
+    }
+
+    private void navigateToLogin() throws GeneralLeanFtException {
+        if (utils.isHighlight())
+            appModel.AdvantageShoppingApplication().LOGINLabel().highlight();
+        appModel.AdvantageShoppingApplication().LOGINLabel().tap();
     }
 
     private void postInstallActions() throws  GeneralLeanFtException {

@@ -9,11 +9,7 @@ import org.testng.annotations.Test;
 import com.hp.lft.sdk.*;
 import com.hp.lft.sdk.mobile.*;
 import com.mf.utils.*;
-
 import unittesting.*;
-
-import javax.xml.ws.handler.LogicalHandler;
-import java.util.Random;
 
 public class LeanFtTest extends UnitTestClassBase {
     private boolean noProblem;
@@ -67,6 +63,13 @@ public class LeanFtTest extends UnitTestClassBase {
     public void afterMethod() throws Exception {
     }
 
+    /*
+    This method runs recursively (calling to itself) to run N cycles of login,
+    purchase and logout.
+    in this case N=2, to change the number of iterations, modify this line
+        if (counter >= 2)
+    For instance, to run once -> if (counter >= 1)
+    */
     @Test //(threadPoolSize = 10, invocationCount = 2)
     public void test() throws GeneralLeanFtException, InterruptedException {
         if (!noProblem) {
@@ -88,16 +91,14 @@ public class LeanFtTest extends UnitTestClassBase {
             // do sign in
             signIn();
 
-            // hold for 10 seconds (just to demo sign in and sign out)
-            Logging.logMessage ("Waiting for 10 seconds... (instead of purchasing stuff)", Logging.LOG_LEVEL.INFO);
-            utils.windowSync(10000);
-            // runMainTest();
+            // Run the main test
+            runMainTest();
 
             // do sign out after completing the test
             openMenu();
             signOut();
 
-            if (counter > 1)
+            if (counter >= 2)
                 return;
 
             utils.setInstallApp(false);

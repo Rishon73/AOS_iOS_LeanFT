@@ -1,5 +1,4 @@
-
-# aos-ios-leanft
+# uftdev-aos-mobile-ios
 
 LeanFT Java project with TestNG framework. Using the following:
 * **LeanFT 14.50**
@@ -35,3 +34,6 @@ MobileUtilities is a framework with basic mobile lab funtions. It works with Mob
   
 To modify the Application Models jar files, clone this project https://github.com/Rishon73/aos-ios-models, do the needed modifications and run  **Maven install** in the Maven Lifecycle - this will install the Applocation Model jars in your local maven repo
 
+
+
+##### Prior to UFT renaming in 2019 was called Mobile AOS Test-iOS
